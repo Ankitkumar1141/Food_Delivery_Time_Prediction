@@ -1,0 +1,79 @@
+import mlflow
+import dagshub
+import json
+from pathlib import Path
+from mlflow import MlflowClient
+import logging
+
+
+# Configure registration logger
+logger = logging.getLogger("register_model")
+logger.setLevel(logging.INFO)
+
+# Stream console handler
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+
+# Register stream handler to logger
+logger.addHandler(handler)
+
+# Set logging format specification
+formatter = logging.Formatter(fmt='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+
+# Authenticate DagsHub and MLflow client
+import dagshub
+import mlflow.client
+dagshub.init(repo_owner='Ankitkumar1141', 
+             repo_name='Food_Delivery_Time_Prediction', 
+             mlflow=True)
+
+# Establish remote MLflow tracking URI
+mlflow.set_tracking_uri("https://dagshub.com/Ankitkumar1141/Food_Delivery_Time_Prediction.mlflow")
+
+
+def load_model_information(file_path):
+    with open(file_path) as f:
+        run_info = json.load(f)
+        
+    return run_info
+
+
+if __name__ == "__main__":
+    # Base workspace directory
+    root_path = Path(__file__).parent.parent.parent
+    
+    # Path to pipeline execution metadata
+    run_info_path = root_path / "run_information.json"
+    
+    # Ingest run details and model parameters
+    run_info = load_model_information(run_info_path)
+    
+    # Extract unique run identifier and model handle
+    run_id = run_info["run_id"]
+    model_name = run_info["model_name"]
+    
+    # Construct MLflow run artifact location
+    model_registry_path = f"runs:/{run_id}/{model_name}"
+    
+    
+    # Register trained model into MLflow Model Registry
+    model_version = mlflow.register_model(model_uri=model_registry_path,
+                                          name=model_name)
+    
+    
+    # Retrieve assigned model version tag
+    registered_model_version = model_version.version
+    registered_model_name = model_version.name
+    logger.info(f"The latest model version in model registry is {registered_model_version}")
+    
+    # Transition registered model version to Staging lifecycle stage
+    client = MlflowClient()
+    client.transition_model_version_stage(
+        name=registered_model_name,
+        version=registered_model_version,
+        stage="Staging"
+    )
+    
+    logger.info("Model pushed to Staging stage")
+    
