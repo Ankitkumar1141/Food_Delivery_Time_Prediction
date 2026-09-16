@@ -45,7 +45,7 @@ def data_cleaning(data: pd.DataFrame):
         .drop(columns="id")
         .drop(index=minor_index)                                                # Filter out underage delivery riders below 18
         .drop(index=six_star_index)                                             # Filter out anomalous ratings exceeding valid 5-star threshold
-        .replace("NaN ",np.nan)                                                 # Normalize missing placeholder strings to NaN
+        .replace("nan ",np.nan)                                                 # Normalize missing placeholder strings to nan
         .assign(
             # Parse regional depot prefix code from rider identifier
             city_name = lambda x: x['rider_id'].str.split("RES").str.get(0),

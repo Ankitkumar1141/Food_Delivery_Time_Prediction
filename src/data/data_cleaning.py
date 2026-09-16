@@ -70,7 +70,7 @@ def data_cleaning(data: pd.DataFrame) -> pd.DataFrame:
         .drop(columns="id")
         .drop(index=minor_index)                                                # Filter out invalid underage riders below 18
         .drop(index=six_star_index)                                             # Filter out anomalous ratings exceeding valid 5-star scale
-        .replace("NaN ",np.nan)                                                 # Normalize string representations to standard null values
+        .replace("nan ",np.nan)                                                 # Normalize string representations to standard null values
         .assign(
             # Extract municipal hub identifier prefix from rider ID
             city_name = lambda x: x['rider_id'].str.split("RES").str.get(0),
